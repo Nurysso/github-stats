@@ -9,16 +9,11 @@ svg {
 #background {
   width: calc(100% - 10px);
   height: calc(100% - 10px);
-  fill: white;
-  stroke: rgb(225, 228, 232);
+  fill: #1a1b27;
+  stroke: #FF6B9D;
   stroke-width: 1px;
   rx: 6px;
   ry: 6px;
-}
-
-#gh-dark-mode-only:target #background {
-  fill: #0d1117;
-  stroke-width: 0.5px;
 }
 
 foreignObject {
@@ -32,13 +27,8 @@ h2 {
   line-height: 24px;
   font-size: 16px;
   font-weight: 600;
-  color: rgb(36, 41, 46);
-  fill: rgb(36, 41, 46);
-}
-
-#gh-dark-mode-only:target h2 {
-  color: #c9d1d9;
-  fill: #c9d1d9;
+  color: #FF6B9D;
+  fill: #FF6B9D;
 }
 
 ul {
@@ -71,55 +61,34 @@ div.ellipsis {
 }
 
 .octicon {
-  fill: rgb(88, 96, 105);
+  fill: #C9FFBF;
   margin-right: 0.5ch;
   vertical-align: top;
-}
-
-#gh-dark-mode-only:target .octicon {
-  color: #8b949e;
-  fill: #8b949e;
 }
 
 .progress {
   display: flex;
   height: 8px;
   overflow: hidden;
-  background-color: rgb(225, 228, 232);
+  background-color: rgba(201, 255, 191, 0.1);
   border-radius: 6px;
   outline: 1px solid transparent;
   margin-bottom: 1em;
 }
 
-#gh-dark-mode-only:target .progress {
-  background-color: rgba(110, 118, 129, 0.4);
-}
-
 .progress-item {
-  outline: 2px solid rgb(225, 228, 232);
+  outline: 2px solid #1a1b27;
   border-collapse: collapse;
-}
-
-#gh-dark-mode-only:target .progress-item {
-  outline: 2px solid #393f47;
 }
 
 .lang {
   font-weight: 600;
   margin-right: 4px;
-  color: rgb(36, 41, 46);
-}
-
-#gh-dark-mode-only:target .lang {
   color: #c9d1d9;
 }
 
 .percent {
-  color: rgb(88, 96, 105)
-}
-
-#gh-dark-mode-only:target .percent {
-  color: #8b949e;
+  color: #C9FFBF;
 }
 </style>
 <g>
@@ -127,17 +96,13 @@ div.ellipsis {
 <g>
 <foreignObject x="21" y="17" width="318" height="176">
 <div xmlns="http://www.w3.org/1999/xhtml" class="ellipsis">
-
 <h2>Languages Used (By File Size)</h2>
-
 <div>
 <span class="progress">
 <span style="background-color: #DA5B0B;width: 38.117%;" class="progress-item"></span><span style="background-color: #00ADD8;width: 10.997%;" class="progress-item"></span><span style="background-color: #dea584;width: 10.227%;" class="progress-item"></span><span style="background-color: #3178c6;width: 10.127%;" class="progress-item"></span><span style="background-color: #89e051;width: 7.922%;" class="progress-item"></span><span style="background-color: #e34c26;width: 5.974%;" class="progress-item"></span><span style="background-color: #3572A5;width: 5.806%;" class="progress-item"></span><span style="background-color: #663399;width: 2.976%;" class="progress-item"></span><span style="background-color: #f1e05a;width: 1.722%;" class="progress-item"></span><span style="background-color: #f34b7d;width: 1.627%;" class="progress-item"></span><span style="background-color: #44a51c;width: 1.347%;" class="progress-item"></span><span style="background-color: #555555;width: 1.168%;" class="progress-item"></span><span style="background-color: #00B4AB;width: 0.975%;" class="progress-item"></span><span style="background-color: #427819;width: 0.726%;" class="progress-item"></span><span style="background-color: #c6538c;width: 0.200%;" class="progress-item"></span><span style="background-color: #012456;width: 0.089%;" class="progress-item"></span>
 </span>
 </div>
-
 <ul>
-
 
 <li style="animation-delay: 0ms;">
 <svg xmlns="http://www.w3.org/2000/svg" class="octicon" style="fill:#DA5B0B;"
@@ -283,9 +248,7 @@ fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8z"></path></svg>
 </li>
 
 
-
 </ul>
-
 </div>
 </foreignObject>
 </g>
