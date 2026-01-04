@@ -117,26 +117,23 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download all artifacts
+    - name: Download generated images
       uses: actions/download-artifact@v4
       with:
-        path: artifacts
+        name: generated-images
+        path: .
 
-    - name: Merge artifacts
-      run: |
-        # Copy generated images (excluding .git directory)
-        if [ -d "artifacts/generated-images" ]; then
-          rsync -av --exclude='.git' artifacts/generated-images/ .
-        fi
+    - name: Download star data
+      uses: actions/download-artifact@v4
+      with:
+        name: star-data
+        path: data
 
-        # Merge data files from both tracking jobs
-        mkdir -p data
-        if [ -d "artifacts/star-data" ]; then
-          cp -f artifacts/star-data/* data/ 2>/dev/null || true
-        fi
-        if [ -d "artifacts/clone-data" ]; then
-          cp -f artifacts/clone-data/* data/ 2>/dev/null || true
-        fi
+    - name: Download clone data
+      uses: actions/download-artifact@v4
+      with:
+        name: clone-data
+        path: data
 
     - name: Commit and push changes
       run: |
