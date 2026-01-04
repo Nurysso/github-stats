@@ -96,7 +96,7 @@ jobs:
 
     - name: Run clone tracker script
       env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_USERNAME: ${{ github.repository_owner }}
       run: python3 track_clones.py
 
