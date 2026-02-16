@@ -1,33 +1,38 @@
 {
-  "last_updated": "2026-01-04 20:02:51",
-  "total_stars": 139,
-  "total_repositories": 14,
-  "public_repositories": 14,
+  "last_updated": "2026-02-16 12:07:13",
+  "total_stars": 157,
+  "total_repositories": 18,
+  "public_repositories": 18,
   "starred_repositories": 11,
   "top_repositories": [
     {
       "name": "Hecate",
-      "stars": 104,
+      "stars": 110,
       "language": "Shell"
     },
     {
       "name": "vanish",
-      "stars": 10,
+      "stars": 19,
       "language": "Go"
     },
     {
       "name": "tyr",
-      "stars": 9,
+      "stars": 10,
       "language": "Rust"
     },
     {
       "name": "eulix",
-      "stars": 4,
+      "stars": 5,
       "language": "Rust"
     },
     {
       "name": "Freya",
       "stars": 3,
+      "language": "N/A"
+    },
+    {
+      "name": "Nurysso",
+      "stars": 2,
       "language": "N/A"
     },
     {
@@ -47,11 +52,6 @@
     },
     {
       "name": "Athena",
-      "stars": 1,
-      "language": "N/A"
-    },
-    {
-      "name": "Hermes",
       "stars": 1,
       "language": "N/A"
     }
