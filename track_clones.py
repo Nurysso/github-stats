@@ -162,8 +162,8 @@ def calculate_cumulative_totals(clone_data, historical_data, today):
 
                 print(f"  → Adding {day_stats['count']} clones from {day_str} for {repo_name}")
 
-        # Clean up old daily records (keep only last 30 days to save space)
-        cutoff_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        # Clean up old daily records (keep only last 2 days to save space)
+        cutoff_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
         daily_records[repo_name] = {
             day: stats
             for day, stats in daily_records[repo_name].items()

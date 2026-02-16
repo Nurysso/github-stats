@@ -2,9 +2,9 @@ name: Generate Stats Images
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   schedule:
-    - cron: "5 0 * * *"
+    - cron: '5 0 * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,104 +15,103 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.8'
-        architecture: 'x64'
-        cache: 'pip'
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+          cache: 'pip'
 
-    - name: Install requirements
-      run: |
-        python3 -m pip install --upgrade pip setuptools wheel
-        python3 -m pip install -r requirements.txt
+      - name: Install requirements
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install -r requirements.txt
 
-    - name: Generate images
-      run: |
-        python3 --version
-        python3 generate_images.py
-      env:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        EXCLUDED: ${{ secrets.EXCLUDED }}
-        EXCLUDED_LANGS: ${{ secrets.EXCLUDED_LANGS }}
-        EXCLUDE_FORKED_REPOS: true
+      - name: Generate images
+        run: |
+          python3 --version
+          python3 generate_images.py
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          EXCLUDED: ${{ secrets.EXCLUDED }}
+          EXCLUDED_LANGS: ${{ secrets.EXCLUDED_LANGS }}
+          EXCLUDE_FORKED_REPOS: true
 
-    - name: Upload generated images
-      uses: actions/upload-artifact@v4
-      with:
-        name: generated-images
-        path: .
-        retention-days: 1
+      - name: Upload generated images
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-images
+          path: .
+          retention-days: 1
 
   track-stars:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install requests PyGithub
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests PyGithub
 
-    - name: Run star tracker script
-      env:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        GITHUB_USERNAME: ${{ github.repository_owner }}
-      run: python3 track_stars.py
+      - name: Run star tracker script
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_USERNAME: ${{ github.repository_owner }}
+        run: python3 track_stars.py
 
-    - name: Upload star data
-      uses: actions/upload-artifact@v4
-      with:
-        name: star-data
-        path: data/
-        retention-days: 1
+      - name: Upload star data
+        uses: actions/upload-artifact@v4
+        with:
+          name: star-data
+          path: data/
+          retention-days: 1
 
   track-clones:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install requests PyGithub
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests PyGithub
 
-    - name: Run clone tracker script
-      env:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        GITHUB_USERNAME: ${{ github.repository_owner }}
-      run: python3 track_clones.py
+      - name: Run clone tracker script
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_USERNAME: ${{ github.repository_owner }}
+        run: python3 track_clones.py
 
-    - name: Upload clone data
-      uses: actions/upload-artifact@v4
-      with:
-        name: clone-data
-        path: data/
-        retention-days: 1
+      - name: Upload clone data
+        uses: actions/upload-artifact@v4
+        with:
+          name: clone-data
+          path: data/
+          retention-days: 1
 
   commit-changes:
-    runs-on: ubuntu-latest
-    needs: [generate-images, track-stars, track-clones]
-    if: always()
-
-    steps:
+  runs-on: ubuntu-latest
+  needs: [generate-images, track-stars, track-clones]
+  if: always()
+  steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -126,21 +125,25 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: star-data
-        path: data
+        path: data-temp-stars # Changed to temp directory
 
     - name: Download clone data
       uses: actions/download-artifact@v4
       with:
         name: clone-data
-        path: data
+        path: data-temp-clones # Changed to temp directory
+
+    - name: Merge data files
+      run: |
+        mkdir -p data
+        cp -r data-temp-stars/* data/ 2>/dev/null || true
+        cp -r data-temp-clones/* data/ 2>/dev/null || true
 
     - name: Commit and push changes
       run: |
         git config --global user.name "github-stats[bot]"
         git config --global user.email "github-stats[bot]@users.noreply.github.com"
-
         git add .
-
         # Check if there are any changes to commit
         if git diff --staged --quiet; then
           echo "No changes to commit"
