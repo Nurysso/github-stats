@@ -1,10 +1,10 @@
 {
-  "last_updated": "2026-05-12 04:00:22",
-  "last_run_date": "2026-05-12",
+  "last_updated": "2026-05-13 04:08:19",
+  "last_run_date": "2026-05-13",
   "period_stats": {
     "description": "Clone statistics for the last 14 days",
-    "total_clones": 99,
-    "total_unique_clones": 69,
+    "total_clones": 96,
+    "total_unique_clones": 67,
     "repositories_tracked": 8,
     "repositories_with_clones": 8,
     "top_repositories": [
@@ -14,19 +14,19 @@
         "period_unique": 24
       },
       {
-        "name": "Hecate",
-        "period_clones": 19,
-        "period_unique": 13
-      },
-      {
         "name": "eulix",
         "period_clones": 15,
         "period_unique": 8
       },
       {
+        "name": "Hecate",
+        "period_clones": 15,
+        "period_unique": 11
+      },
+      {
         "name": "tyr",
         "period_clones": 11,
-        "period_unique": 11
+        "period_unique": 10
       },
       {
         "name": "Freya",
@@ -45,36 +45,36 @@
       },
       {
         "name": "sddm-astronaut-theme",
-        "period_clones": 2,
-        "period_unique": 2
+        "period_clones": 3,
+        "period_unique": 3
       }
     ]
   },
   "cumulative_stats": {
     "description": "All-time cumulative clone statistics (since tracking began)",
-    "total_clones": 15754,
+    "total_clones": 15844,
     "total_unique_clones": 569,
     "repositories_tracked": 22,
     "repositories_with_clones": 21,
     "top_repositories": [
       {
         "name": "Hecate",
-        "total_clones": 4670,
+        "total_clones": 4684,
         "total_unique": 84
       },
       {
         "name": "eulix",
-        "total_clones": 3796,
+        "total_clones": 3810,
         "total_unique": 50
       },
       {
         "name": "tyr",
-        "total_clones": 1465,
+        "total_clones": 1475,
         "total_unique": 38
       },
       {
         "name": "vanish",
-        "total_clones": 1265,
+        "total_clones": 1302,
         "total_unique": 57
       },
       {
@@ -84,22 +84,22 @@
       },
       {
         "name": "prtofolio",
-        "total_clones": 869,
+        "total_clones": 874,
         "total_unique": 34
       },
       {
         "name": "Freya",
-        "total_clones": 699,
+        "total_clones": 704,
         "total_unique": 29
       },
       {
         "name": "sddm-astronaut-theme",
-        "total_clones": 677,
+        "total_clones": 680,
         "total_unique": 18
       },
       {
         "name": "Hermes",
-        "total_clones": 485,
+        "total_clones": 487,
         "total_unique": 21
       },
       {
@@ -123,16 +123,16 @@
       "last_updated": "2026-02-23 03:14:24"
     },
     "eulix": {
-      "total_clones": 3796,
+      "total_clones": 3810,
       "total_unique": 50,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "Freya": {
-      "total_clones": 699,
+      "total_clones": 704,
       "total_unique": 29,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "gin": {
       "total_clones": 64,
@@ -147,16 +147,16 @@
       "last_updated": "2026-01-04 02:29:50"
     },
     "Hecate": {
-      "total_clones": 4670,
+      "total_clones": 4684,
       "total_unique": 84,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "Hermes": {
-      "total_clones": 485,
+      "total_clones": 487,
       "total_unique": 21,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "hydra": {
       "total_clones": 2,
@@ -189,22 +189,22 @@
       "last_updated": "2026-01-04 02:29:50"
     },
     "prtofolio": {
-      "total_clones": 869,
+      "total_clones": 874,
       "total_unique": 34,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "sddm-astronaut-theme": {
-      "total_clones": 677,
+      "total_clones": 680,
       "total_unique": 18,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "vanish": {
-      "total_clones": 1265,
+      "total_clones": 1302,
       "total_unique": 57,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "venus": {
       "total_clones": 79,
@@ -219,10 +219,10 @@
       "last_updated": "2026-01-04 02:29:50"
     },
     "tyr": {
-      "total_clones": 1465,
+      "total_clones": 1475,
       "total_unique": 38,
       "first_tracked": "2025-12-15 01:42:44",
-      "last_updated": "2026-05-12 04:00:22"
+      "last_updated": "2026-05-13 04:08:19"
     },
     "Apollo": {
       "total_clones": 18,
@@ -329,13 +329,13 @@
       }
     },
     "eulix": {
-      "2026-05-10": {
+      "2026-05-11": {
         "count": 1,
         "uniques": 1
       }
     },
     "Freya": {
-      "2026-05-10": {
+      "2026-05-11": {
         "count": 0,
         "uniques": 0
       }
@@ -517,15 +517,15 @@
       }
     },
     "Hecate": {
-      "2026-05-10": {
-        "count": 1,
-        "uniques": 1
+      "2026-05-11": {
+        "count": 0,
+        "uniques": 0
       }
     },
     "Hermes": {
-      "2026-05-10": {
-        "count": 1,
-        "uniques": 1
+      "2026-05-11": {
+        "count": 0,
+        "uniques": 0
       }
     },
     "Nurysso": {
@@ -617,15 +617,15 @@
       }
     },
     "prtofolio": {
-      "2026-05-10": {
+      "2026-05-11": {
         "count": 0,
         "uniques": 0
       }
     },
     "sddm-astronaut-theme": {
-      "2026-05-10": {
-        "count": 0,
-        "uniques": 0
+      "2026-05-11": {
+        "count": 1,
+        "uniques": 1
       }
     },
     "snapd": {
@@ -715,15 +715,15 @@
       }
     },
     "tyr": {
-      "2026-05-10": {
+      "2026-05-11": {
         "count": 1,
         "uniques": 1
       }
     },
     "vanish": {
-      "2026-05-10": {
-        "count": 2,
-        "uniques": 2
+      "2026-05-11": {
+        "count": 0,
+        "uniques": 0
       }
     },
     "venus": {
