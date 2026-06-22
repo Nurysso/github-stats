@@ -1,12 +1,12 @@
 {
-  "last_updated": "2026-06-22 05:23:05",
+  "last_updated": "2026-06-22 13:23:49",
   "last_run_date": "2026-06-22",
   "period_stats": {
     "description": "Clone statistics for the last 14 days",
-    "total_clones": 428,
-    "total_unique_clones": 225,
-    "repositories_tracked": 6,
-    "repositories_with_clones": 6,
+    "total_clones": 483,
+    "total_unique_clones": 271,
+    "repositories_tracked": 10,
+    "repositories_with_clones": 10,
     "top_repositories": [
       {
         "name": "eulix",
@@ -24,6 +24,11 @@
         "period_unique": 39
       },
       {
+        "name": "Nurysso",
+        "period_clones": 32,
+        "period_unique": 24
+      },
+      {
         "name": "prtofolio",
         "period_clones": 30,
         "period_unique": 16
@@ -34,6 +39,21 @@
         "period_unique": 26
       },
       {
+        "name": "gstrings",
+        "period_clones": 13,
+        "period_unique": 12
+      },
+      {
+        "name": "BinRex",
+        "period_clones": 6,
+        "period_unique": 6
+      },
+      {
+        "name": "Hera",
+        "period_clones": 4,
+        "period_unique": 4
+      },
+      {
         "name": "Hermes",
         "period_clones": 4,
         "period_unique": 4
@@ -42,39 +62,39 @@
   },
   "cumulative_stats": {
     "description": "All-time cumulative clone statistics (since tracking began)",
-    "total_clones": 24528,
-    "total_unique_clones": 650,
-    "repositories_tracked": 22,
-    "repositories_with_clones": 21,
+    "total_clones": 25001,
+    "total_unique_clones": 672,
+    "repositories_tracked": 25,
+    "repositories_with_clones": 24,
     "top_repositories": [
       {
         "name": "eulix",
-        "total_clones": 7304,
+        "total_clones": 7507,
         "total_unique": 107
       },
       {
         "name": "Hecate",
-        "total_clones": 6064,
+        "total_clones": 6151,
         "total_unique": 84
       },
       {
         "name": "tyr",
-        "total_clones": 2625,
+        "total_clones": 2653,
         "total_unique": 38
       },
       {
         "name": "vanish",
-        "total_clones": 2299,
+        "total_clones": 2366,
         "total_unique": 57
       },
       {
         "name": "prtofolio",
-        "total_clones": 2291,
+        "total_clones": 2320,
         "total_unique": 58
       },
       {
         "name": "Nurysso",
-        "total_clones": 1156,
+        "total_clones": 1188,
         "total_unique": 84
       },
       {
@@ -89,7 +109,7 @@
       },
       {
         "name": "Hermes",
-        "total_clones": 565,
+        "total_clones": 569,
         "total_unique": 21
       },
       {
@@ -113,10 +133,10 @@
       "last_updated": "2026-02-23 03:14:24"
     },
     "eulix": {
-      "total_clones": 7304,
+      "total_clones": 7507,
       "total_unique": 107,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-06-22 05:23:05"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "Freya": {
       "total_clones": 793,
@@ -137,16 +157,16 @@
       "last_updated": "2026-01-04 02:29:50"
     },
     "Hecate": {
-      "total_clones": 6064,
+      "total_clones": 6151,
       "total_unique": 84,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-06-22 05:23:05"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "Hermes": {
-      "total_clones": 565,
+      "total_clones": 569,
       "total_unique": 21,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-06-22 05:23:05"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "hydra": {
       "total_clones": 2,
@@ -167,10 +187,10 @@
       "last_updated": "2025-12-08 14:40:32"
     },
     "Nurysso": {
-      "total_clones": 1156,
+      "total_clones": 1188,
       "total_unique": 84,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-04-09 03:22:00"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "pebble": {
       "total_clones": 257,
@@ -179,10 +199,10 @@
       "last_updated": "2026-01-04 02:29:50"
     },
     "prtofolio": {
-      "total_clones": 2291,
+      "total_clones": 2320,
       "total_unique": 58,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-06-22 05:23:05"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "sddm-astronaut-theme": {
       "total_clones": 759,
@@ -191,10 +211,10 @@
       "last_updated": "2026-06-09 04:19:01"
     },
     "vanish": {
-      "total_clones": 2299,
+      "total_clones": 2366,
       "total_unique": 57,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-06-22 05:23:05"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "venus": {
       "total_clones": 79,
@@ -209,10 +229,10 @@
       "last_updated": "2026-01-04 02:29:50"
     },
     "tyr": {
-      "total_clones": 2625,
+      "total_clones": 2653,
       "total_unique": 38,
       "first_tracked": "2025-12-15 01:42:44",
-      "last_updated": "2026-06-22 05:23:05"
+      "last_updated": "2026-06-22 13:23:49"
     },
     "Apollo": {
       "total_clones": 18,
@@ -231,6 +251,24 @@
       "total_unique": 0,
       "first_tracked": "2026-01-04 02:29:50",
       "last_updated": "2026-01-04 02:29:50"
+    },
+    "BinRex": {
+      "total_clones": 6,
+      "total_unique": 6,
+      "first_tracked": "2026-06-22 13:23:49",
+      "last_updated": "2026-06-22 13:23:49"
+    },
+    "gstrings": {
+      "total_clones": 13,
+      "total_unique": 12,
+      "first_tracked": "2026-06-22 13:23:49",
+      "last_updated": "2026-06-22 13:23:49"
+    },
+    "Hera": {
+      "total_clones": 4,
+      "total_unique": 4,
+      "first_tracked": "2026-06-22 13:23:49",
+      "last_updated": "2026-06-22 13:23:49"
     }
   },
   "daily_records": {
@@ -519,7 +557,11 @@
       }
     },
     "Nurysso": {
-      "2026-04-07": {
+      "2026-06-20": {
+        "count": 1,
+        "uniques": 1
+      },
+      "2026-06-21": {
         "count": 0,
         "uniques": 0
       }
@@ -850,6 +892,32 @@
         "uniques": 0
       },
       "2026-01-03": {
+        "count": 0,
+        "uniques": 0
+      }
+    },
+    "BinRex": {
+      "2026-06-20": {
+        "count": 0,
+        "uniques": 0
+      },
+      "2026-06-21": {
+        "count": 4,
+        "uniques": 4
+      }
+    },
+    "gstrings": {
+      "2026-06-20": {
+        "count": 1,
+        "uniques": 1
+      }
+    },
+    "Hera": {
+      "2026-06-20": {
+        "count": 0,
+        "uniques": 0
+      },
+      "2026-06-21": {
         "count": 0,
         "uniques": 0
       }

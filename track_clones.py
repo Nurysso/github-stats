@@ -36,7 +36,7 @@ def load_historical_data():
 def get_clone_stats():
     """Fetch clone statistics for all repositories"""
     token = os.environ.get("ACCESS_TOKEN")
-    username = os.environ.get("GITHUB_USERNAME")
+    username = os.environ.get("GITHUB_ACTOR")
 
     print(f"=== Debug Info ===")
     print(f"Username: {username}")
@@ -44,7 +44,7 @@ def get_clone_stats():
     print("=" * 60)
 
     if not token or not username:
-        raise ValueError("ACCESS_TOKEN and GITHUB_USERNAME must be set")
+        raise ValueError("ACCESS_TOKEN and GITHUB_ACTOR must be set")
 
     auth = Auth.Token(token)
     g = Github(auth=auth)
