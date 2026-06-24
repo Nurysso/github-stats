@@ -1,4 +1,5 @@
 name: Generate Stats Images
+
 on:
   push:
     branches: [master]
@@ -74,9 +75,38 @@ jobs:
           path: data/
           retention-days: 1
 
+  track-stars:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests PyGithub
+
+      - name: Run star tracker script
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_USERNAME: ${{ github.repository_owner }}
+        run: python3 track_stars.py
+
+      - name: Upload star data
+        uses: actions/upload-artifact@v4
+        with:
+          name: star-data
+          path: data/
+          retention-days: 1
+
   commit-changes:
     runs-on: ubuntu-latest
-    needs: [generate-images, track-clones]
+    needs: [generate-images, track-clones, track-stars]
     if: always()
     steps:
       - name: Checkout repository
@@ -86,7 +116,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: generated-images
-          path: .
+          path: generated/
 
       - name: Download clone data
         uses: actions/download-artifact@v4
@@ -94,12 +124,17 @@ jobs:
           name: clone-data
           path: data/
 
+      - name: Download star data
+        uses: actions/download-artifact@v4
+        with:
+          name: star-data
+          path: data/
+
       - name: Commit and push changes
         run: |
           git config --global user.name "github-stats[bot]"
           git config --global user.email "github-stats[bot]@users.noreply.github.com"
           git add generated/ data/
-          # Check if there are any changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
