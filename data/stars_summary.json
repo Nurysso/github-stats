@@ -1,59 +1,59 @@
 {
-  "last_updated": "2026-02-16 12:07:13",
-  "total_stars": 157,
-  "total_repositories": 18,
-  "public_repositories": 18,
-  "starred_repositories": 11,
+  "last_updated": "2026-06-24 07:40:20",
+  "total_stars": 170,
+  "total_repositories": 16,
+  "public_repositories": 16,
+  "starred_repositories": 8,
   "top_repositories": [
     {
       "name": "Hecate",
-      "stars": 110,
+      "stars": 115,
       "language": "Shell"
     },
     {
       "name": "vanish",
-      "stars": 19,
+      "stars": 21,
+      "language": "Go"
+    },
+    {
+      "name": "eulix",
+      "stars": 14,
       "language": "Go"
     },
     {
       "name": "tyr",
-      "stars": 10,
+      "stars": 13,
       "language": "Rust"
-    },
-    {
-      "name": "eulix",
-      "stars": 5,
-      "language": "Rust"
-    },
-    {
-      "name": "Freya",
-      "stars": 3,
-      "language": "N/A"
-    },
-    {
-      "name": "Nurysso",
-      "stars": 2,
-      "language": "N/A"
     },
     {
       "name": "prtofolio",
+      "stars": 3,
+      "language": "TypeScript"
+    },
+    {
+      "name": "BinRex",
       "stars": 2,
       "language": "TypeScript"
     },
     {
-      "name": "sddm-astronaut-theme",
-      "stars": 2,
-      "language": "QML"
-    },
-    {
-      "name": "venus",
-      "stars": 2,
-      "language": "CSS"
-    },
-    {
-      "name": "Athena",
+      "name": "Hermes",
       "stars": 1,
       "language": "N/A"
+    },
+    {
+      "name": "yajl",
+      "stars": 1,
+      "language": "N/A"
+    },
+    {
+      "name": "gin",
+      "stars": 0,
+      "language": "N/A"
+    },
+    {
+      "name": "github-stats",
+      "stars": 0,
+      "language": "Python"
     }
   ]
 }
