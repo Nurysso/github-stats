@@ -1,8 +1,8 @@
 {
-  "last_updated": "2026-06-29 04:53:57",
+  "last_updated": "2026-06-30 04:20:01",
   "total_stars": 170,
-  "total_repositories": 16,
-  "public_repositories": 16,
+  "total_repositories": 14,
+  "public_repositories": 14,
   "starred_repositories": 8,
   "top_repositories": [
     {
@@ -48,7 +48,7 @@
     {
       "name": "gin",
       "stars": 0,
-      "language": "N/A"
+      "language": "Go"
     },
     {
       "name": "github-stats",
