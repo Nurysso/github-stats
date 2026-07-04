@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-03 04:01:51",
+  "last_updated": "2026-07-04 03:55:27",
   "total_stars": 172,
   "total_repositories": 14,
   "public_repositories": 14,
@@ -18,7 +18,7 @@
     {
       "name": "eulix",
       "stars": 16,
-      "language": "Go"
+      "language": "Rust"
     },
     {
       "name": "tyr",
