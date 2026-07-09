@@ -11,10 +11,10 @@ os.makedirs(DATA_DIR, exist_ok=True)
 def get_star_stats():
     """Fetch star statistics for all repositories"""
     token = os.environ.get('ACCESS_TOKEN')
-    username = os.environ.get('GITHUB_USERNAME')
+    username = os.environ.get('GITHUB_ACTOR')
 
     if not token or not username:
-        raise ValueError("ACCESS_TOKEN and GITHUB_USERNAME must be set")
+        raise ValueError("ACCESS_TOKEN and GITHUB_ACTOR must be set")
 
     # Use the new authentication method
     from github import Auth

@@ -35,7 +35,7 @@ def load_historical_data():
 
 def get_clone_stats():
     """Fetch clone statistics for all repositories"""
-    token = os.environ.get("ACCESS_TOKEN")
+    token = os.environ.get("GITHUB_TOKEN")
     username = os.environ.get("GITHUB_ACTOR")
 
     print(f"=== Debug Info ===")
