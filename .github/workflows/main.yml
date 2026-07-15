@@ -17,27 +17,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          architecture: 'x64'
-          cache: 'pip'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Install requirements
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install -r requirements.txt
+      - name: Set up Python 3.11
+        run: uv python install 3.11
 
       - name: Generate images
-        run: |
-          python3 --version
-          python3 generate_images.py
+        run: uv run generate_images.py
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           EXCLUDED: ${{ secrets.EXCLUDED }}
           EXCLUDED_LANGS: ${{ secrets.EXCLUDED_LANGS }}
           EXCLUDE_FORKED_REPOS: true
+
+      - name: Debug generated output
+        run: ls -la generated/ || echo "generated/ directory missing"
 
       - name: Upload generated images
         uses: actions/upload-artifact@v4
@@ -52,21 +47,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install requests PyGithub
+      - name: Set up Python 3.11
+        run: uv python install 3.11
 
       - name: Run clone tracker script
+        run: uv run track_clones.py
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
-        run: python3 track_clones.py
+
+      - name: Debug clone data output
+        run: ls -la data/ || echo "data/ directory missing"
 
       - name: Upload clone data
         uses: actions/upload-artifact@v4
@@ -81,21 +75,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install requests PyGithub
+      - name: Set up Python 3.11
+        run: uv python install 3.11
 
       - name: Run star tracker script
+        run: uv run track_stars.py
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
-        run: python3 track_stars.py
+
+      - name: Debug star data output
+        run: ls -la data/ || echo "data/ directory missing"
 
       - name: Upload star data
         uses: actions/upload-artifact@v4
@@ -117,24 +110,34 @@ jobs:
         with:
           name: generated-images
           path: generated/
+        continue-on-error: true
 
       - name: Download clone data
         uses: actions/download-artifact@v4
         with:
           name: clone-data
           path: data/
+        continue-on-error: true
 
       - name: Download star data
         uses: actions/download-artifact@v4
         with:
           name: star-data
           path: data/
+        continue-on-error: true
+
+      - name: Debug all downloaded files
+        run: |
+          echo "=== generated/ ==="
+          ls -la generated/ || echo "generated/ missing"
+          echo "=== data/ ==="
+          ls -la data/ || echo "data/ missing"
 
       - name: Commit and push changes
         run: |
           git config --global user.name "github-stats[bot]"
           git config --global user.email "github-stats[bot]@users.noreply.github.com"
-          git add generated/ data/
+          git add generated/ data/ || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
