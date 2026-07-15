@@ -17,14 +17,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
       - name: Set up Python 3.11
-        run: uv python install 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+          cache: 'pip'
+
+      - name: Install requirements
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install -r requirements.txt
 
       - name: Generate images
-        run: uv run generate_images.py
+        run: python3 generate_images.py
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           EXCLUDED: ${{ secrets.EXCLUDED }}
@@ -47,14 +53,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
       - name: Set up Python 3.11
-        run: uv python install 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests PyGithub
 
       - name: Run clone tracker script
-        run: uv run track_clones.py
+        run: python3 track_clones.py
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
@@ -75,14 +85,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
       - name: Set up Python 3.11
-        run: uv python install 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests PyGithub
 
       - name: Run star tracker script
-        run: uv run track_stars.py
+        run: python3 track_stars.py
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_USERNAME: ${{ github.repository_owner }}
