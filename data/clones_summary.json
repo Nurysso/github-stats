@@ -62,8 +62,8 @@
   },
   "cumulative_stats": {
     "description": "All-time cumulative clone statistics (since tracking began)",
-    "total_clones": 27836,
-    "total_unique_clones": 682,
+    "total_clones": 37836,
+    "total_unique_clones": 1682,
     "repositories_tracked": 25,
     "repositories_with_clones": 24,
     "top_repositories": [
