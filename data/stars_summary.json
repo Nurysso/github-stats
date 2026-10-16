@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-10-15 04:25:13",
-  "total_stars": 181,
+  "last_updated": "2026-10-16 04:20:32",
+  "total_stars": 183,
   "total_repositories": 27,
   "public_repositories": 27,
   "starred_repositories": 8,
@@ -11,14 +11,14 @@
       "language": "Shell"
     },
     {
+      "name": "eulix",
+      "stars": 21,
+      "language": "Rust"
+    },
+    {
       "name": "vanish",
       "stars": 21,
       "language": "Go"
-    },
-    {
-      "name": "eulix",
-      "stars": 19,
-      "language": "Rust"
     },
     {
       "name": "tyr",
