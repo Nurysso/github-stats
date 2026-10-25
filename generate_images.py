@@ -2,382 +2,352 @@
 
 import asyncio
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timedelta, timezone
+from html import escape
 
 import aiohttp
 
 from github_stats import Stats
 
-# ── Canvas ────────────────────────────────────────────────────────────────────
-W       = 860
-PAD     = 20
-GAP     = 12
+# ── Layout ────────────────────────────────────────────────────────────────────
+# One panel, three bands separated by hairlines. Everything aligns to PX.
+W = 860
+PX = 30                      # left/right content padding
+CW = W - 2 * PX              # content width
 
-# Row 1: stats (left) + languages (right), both at y=20, height=310
-CARD1_X  = 26
-CARD1_Y  = 20
-CARD1_W  = 400
-CARD1_H  = 210
+HEAD_H = 58
+HERO_H = 156                 # streak + headline numbers
+LANG_H = 140                 # languages
+ACT_H = 200                  # 30-day activity
 
-CARD2_X  = 440
-CARD2_Y  = 20
-CARD2_W  = 400
-CARD2_H  = 210
+Y_HERO = HEAD_H
+Y_LANG = Y_HERO + HERO_H
+Y_ACT = Y_LANG + LANG_H
+TOTAL_H = Y_ACT + ACT_H
 
-# Row 2: contribution graph — starts at y = 20+310+12 = 342
-GRAPH_Y  = CARD1_Y + CARD1_H + GAP   # 342
-GRAPH_H  = 210
-GRAPH_CX = 20
-GRAPH_CW = 820
+WINDOW = 30                  # days shown in the activity chart
 
-TOTAL_H  = GRAPH_Y + GRAPH_H + PAD   # 342+210+20 = 572
+# ── Type & colour ─────────────────────────────────────────────────────────────
+# GitHub renders README images as <img>, which blocks web fonts, so these are
+# system stacks. Numbers get a serif for character; everything else is sans.
+SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'
+SERIF = '"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'
 
-# ── Dracula palette ───────────────────────────────────────────────────────────
-BG     = "#282a36"
-CARD   = "#1e1f29"
-BORDER = "#44475a"
-PINK   = "#ff79c6"
-PURPLE = "#bd93f9"
-GREEN  = "#50fa7b"
-CYAN   = "#8be9fd"
-ORANGE = "#ffb86c"
-FG     = "#f8f8f2"
-MUTED  = "#6272a4"
+DARK = dict(panel="#151b27", line="#27314a", ink="#e8ecf5", mute="#8a95ad",
+            ember="#ffb454", dim="#53617f", track="#222b3f")
+LIGHT = dict(panel="#ffffff", line="#dfe4ee", ink="#1a2130", mute="#677189",
+             ember="#d97706", dim="#aab4c9", track="#e9edf4")
+
+
+def _vars(p: dict) -> str:
+    return ";".join(f"--{k}:{v}" for k, v in p.items())
+
+
+STYLE_BODY = """
+text{font-family:SANS;fill:var(--ink)}
+.panel{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.rule{stroke:var(--line);stroke-width:1}
+.name{font-size:19px;font-weight:650}
+.h{font-size:13px;font-weight:600}
+.sm{font-size:12px}
+.xs{font-size:10.5px}
+.mute{fill:var(--mute)}
+.num{font-family:SERIF;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
+.hero{font-size:62px;fill:var(--ember)}
+.val{font-size:34px}
+.unit{font-family:SANS;font-size:15px;font-weight:500;fill:var(--mute)}
+.track{fill:var(--track)}
+.seg{stroke:var(--panel);stroke-width:2}
+.b-streak{fill:var(--ember)}
+.b-dim{fill:var(--dim)}
+.tick{fill:var(--track)}
+.ring{fill:none;stroke:var(--ember);stroke-width:1.6}
+.span{stroke:var(--ember);stroke-width:3;stroke-linecap:round}
+.grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.axis{stroke:var(--line);stroke-width:1}
+@media (prefers-reduced-motion: no-preference){
+  .bar{transform-box:fill-box;transform-origin:50% 100%;
+       animation:rise 700ms cubic-bezier(.2,.8,.2,1) both}
+  @keyframes rise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+}
+""".replace("SANS", SANS).replace("SERIF", SERIF)
+
+
+def build_style(theme: str) -> str:
+    """theme: 'dark' or 'light' (fixed colours) or 'auto' (follows OS setting)."""
+    if theme == "dark":
+        head = f":root{{{_vars(DARK)}}}"
+    elif theme == "light":
+        head = f":root{{{_vars(LIGHT)}}}"
+    else:
+        head = (f":root{{{_vars(DARK)}}}"
+                f"@media (prefers-color-scheme: light){{:root{{{_vars(LIGHT)}}}}}")
+    return head + STYLE_BODY
 
 LANG_COLORS = {
-    "Python":"#3572A5","Rust":"#dea584","Go":"#00ADD8",
-    "TypeScript":"#2b7489","JavaScript":"#f1e05a","C":"#555555",
-    "C++":"#f34b7d","Shell":"#89e051","HTML":"#e34c26",
-    "CSS":"#563d7c","Nix":"#7e7eff","Lua":"#000080",
-    "Makefile":"#427819","TOML":"#9c4221",
+    "Python": "#3572A5", "Rust": "#dea584", "Go": "#00ADD8",
+    "TypeScript": "#3178c6", "JavaScript": "#f1e05a", "C": "#6e7681",
+    "C++": "#f34b7d", "Shell": "#89e051", "HTML": "#e34c26",
+    "CSS": "#8957e5", "Nix": "#7e7eff", "Lua": "#3b5bdb",
+    "Makefile": "#427819", "TOML": "#9c4221",
 }
-def lc(n): return LANG_COLORS.get(n, "#8b949e")
-
-def generate_output_folder():
-    if not os.path.isdir("generated"):
-        os.mkdir("generated")
 
 
-# ── Animation helpers ─────────────────────────────────────────────────────────
-def a_fade(delay, dur=500):
-    return (f'<animate attributeName="opacity" from="0" to="1" '
-            f'dur="{dur}ms" begin="{delay}ms" fill="freeze"/>')
-
-def a_slide(delay, dx=-24, dur=450):
-    return (f'<animate attributeName="opacity" from="0" to="1" '
-            f'dur="{dur}ms" begin="{delay}ms" fill="freeze"/>'
-            f'<animateTransform attributeName="transform" type="translate" '
-            f'from="{dx},0" to="0,0" dur="{dur}ms" begin="{delay}ms" '
-            f'fill="freeze" additive="sum"/>')
-
-def a_dash(delay, length, dur=500):
-    return (f'<animate attributeName="stroke-dashoffset" '
-            f'from="{length}" to="0" dur="{dur}ms" begin="{delay}ms" fill="freeze"/>')
-
-def a_grow(delay, to_w, dur=450):
-    return (f'<animate attributeName="width" from="0" to="{to_w}" '
-            f'dur="{dur}ms" begin="{delay}ms" fill="freeze"/>')
+def lang_color(name: str) -> str:
+    return LANG_COLORS.get(name, "#8b949e")
 
 
-# ── SVG defs ──────────────────────────────────────────────────────────────────
-def svg_defs():
-    return f"""<defs>
-  <linearGradient id="g-bar" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="{PINK}"/>
-    <stop offset="100%" stop-color="{PURPLE}"/>
-  </linearGradient>
-  <linearGradient id="g-area" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%"   stop-color="{PURPLE}" stop-opacity="0.45"/>
-    <stop offset="100%" stop-color="{PURPLE}" stop-opacity="0.02"/>
-  </linearGradient>
-  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-    <feGaussianBlur stdDeviation="2.5" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-  <filter id="glow-sm" x="-80%" y="-80%" width="260%" height="260%">
-    <feGaussianBlur stdDeviation="1.5" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-</defs>"""
+def short_date(iso: str) -> str:
+    d = date.fromisoformat(iso)
+    return f"{d:%b} {d.day}"
 
 
-# ── Card shell ────────────────────────────────────────────────────────────────
-def card(x, y, w, h):
-    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="{CARD}"/>'
+def generate_output_folder() -> None:
+    os.makedirs("generated", exist_ok=True)
 
-def header(cx, cy, cw, text, color, delay=50, centered=False):
-    div_len = cw - 32
-    tx = (cx + cw // 2) if centered else (cx + 16)
-    anchor = 'text-anchor="middle" ' if centered else ''
-    title_y = cy + 26
-    div_y   = cy + 42
+
+def rule(y: float) -> str:
+    return f'<line class="rule" x1="{PX}" y1="{y}" x2="{W - PX}" y2="{y}"/>'
+
+
+# ── Header ────────────────────────────────────────────────────────────────────
+def build_header(name: str, updated: str) -> str:
     return (
-        f'<g opacity="0" transform="translate(-20,0)">{a_slide(delay)}'
-        f'<text x="{tx+10}" y="{title_y}" font-family="system-ui,sans-serif" '
-        f'font-size="14" font-weight="700" fill="{color}" {anchor}letter-spacing="0.3">{text}</text>'
-        f'</g>'
-        f'<line x1="{cx+16}" y1="{div_y}" x2="{cx+16+div_len}" y2="{div_y}" '
-        f'stroke="{BORDER}" stroke-width="0.8" '
-        f'stroke-dasharray="{div_len}" stroke-dashoffset="{div_len}">'
-        f'{a_dash(delay+80, div_len)}'
-        f'</line>'
+        f'<text class="name" x="{PX}" y="40">{escape(name)} on GitHub</text>'
+        f'<text class="mute sm" x="{W - PX}" y="40" text-anchor="end">Updated {updated}</text>'
     )
 
 
-# ── Icons ─────────────────────────────────────────────────────────────────────
-ICONS = {
-    "star":     "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z",
-    "fork":     "M6 3a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4zM6 9a2 2 0 00-2 2v1a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2v-1a2 2 0 00-2-2h-5V7h-2v2H6z",
-    "commits":  "M11 4a8 8 0 100 16A8 8 0 0011 4zm0 2a6 6 0 110 12A6 6 0 0111 6zm0 2a4 4 0 100 8 4 4 0 000-8z",
-    "eye":      "M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z",
-    "repo":     "M4 4h16v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h10v2H4z",
-    "flame":    "M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14zm0 16a2 2 0 01-2-2c0-2 2-4 2-6 0 2 2 4 2 6a2 2 0 01-2 2z",
-    "bolt":     "M13 2L4 13h7l-2 9 11-12h-7z",
-    "calendar": "M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2zm0 4v10h14V8H5zm2 2h4v3H7v-3zm6 0h4v3h-4v-3z",
-}
+# ── Band 1: streak (hero) + headline numbers ──────────────────────────────────
+def build_hero(streak: dict, stars: int, contribs: int, repos: int) -> str:
+    y0 = Y_HERO
+    cur = streak["current_streak"]
 
-def icon(name, x, y, color, delay=0, size=16):
-    s = size / 24
-    p = ICONS.get(name, "")
-    return (f'<g transform="translate({x},{y}) scale({s:.3f})" opacity="0">'
-            f'{a_fade(delay)}'
-            f'<path d="{p}" fill="{color}"/>'
-            f'</g>')
+    if streak["last_active"]:
+        status = f'Last active {short_date(streak["last_active"])}'
+    else:
+        status = "No contributions in the past year"
 
-
-# ── 1. Stats card (with streak rows) ─────────────────────────────────────────
-# 7 rows total: stars, forks, contribs, views, repos, current streak, longest streak
-# rows spaced 32px from baseline 88, fitting in h=310
-
-def build_stats_card(name, stars, forks, contribs, views, repos,
-                     current_streak, longest_streak):
-    cx, cy, cw, ch = CARD1_X, CARD1_Y, CARD1_W, CARD1_H
-    rows = [
-        ("star",     "Stars",           f"{stars:,}",          ORANGE,  120),
-        # ("fork",     "Forks",           f"{forks:,}",           CYAN,   180),
-        ("commits",  "Contributions",   f"{contribs:,}",        GREEN,   240),
-        # ("eye",      "Profile Views",   f"{views:,}",           PURPLE,  300),
-        # ("repo",     "Repositories",    f"{repos:,}",           PINK,    360),
-        ("flame",    "Current Streak",  f"{current_streak}d",   ORANGE,  420),
-        ("bolt",     "Longest Streak",  f"{longest_streak}d",   CYAN,    480),
-    ]
     out = [
-        card(cx, cy, cw, ch),
-        header(cx, cy, cw, f"{name}'s Stats", PINK, delay=50),
+        rule(y0),
+        f'<text class="mute sm" x="{PX}" y="{y0 + 34}">Current streak</text>',
+        f'<text class="num hero" x="{PX}" y="{y0 + 92}">{cur}'
+        f'<tspan class="unit" dx="8">{"day" if cur == 1 else "days"}</tspan></text>',
+        f'<text class="sm" x="{PX}" y="{y0 + 118}">{status}</text>',
+        f'<text class="mute xs" x="{PX}" y="{y0 + 135}">'
+        f'One day off keeps it going. Two in a row ends it.</text>',
+        f'<line class="rule" x1="350" y1="{y0 + 26}" x2="350" y2="{y0 + HERO_H - 26}"/>',
     ]
-    for i, (ico, label, val, color, delay) in enumerate(rows):
-        icon_top  = cy + 74 + i * 32
-        text_base = cy + 88 + i * 32
-        icon_x    = cx + 16
-        text_x    = cx + 58
-        val_x     = cx + cw - 16
+
+    longest = streak["longest_streak"]
+    if streak["longest_start"]:
+        longest_sub = f'{short_date(streak["longest_start"])} to {short_date(streak["longest_end"])}'
+    else:
+        longest_sub = "No streak yet"
+
+    metrics = [
+        (380, "Longest streak", f"{longest}", "day" if longest == 1 else "days", longest_sub),
+        (540, "Stars earned", f"{stars:,}", "", f"across {repos} repositories"),
+        (700, "Contributions", f"{contribs:,}", "", "all time"),
+    ]
+    for x, label, value, unit, sub in metrics:
+        unit_el = f'<tspan class="unit" dx="6">{unit}</tspan>' if unit else ""
         out += [
-            icon(ico, icon_x, icon_top, color, delay, size=16),
-            f'<g opacity="0" transform="translate(-20,0)">{a_slide(delay)}'
-            f'<text x="{text_x}" y="{text_base}" font-family="system-ui,sans-serif" '
-            f'font-size="13" fill="{FG}">{label}</text>'
-            f'<text x="{val_x}" y="{text_base}" font-family="system-ui,sans-serif" '
-            f'font-size="13" font-weight="700" fill="{color}" text-anchor="end">{val}</text>'
-            f'</g>',
+            f'<text class="mute sm" x="{x}" y="{y0 + 34}">{label}</text>',
+            f'<text class="num val" x="{x}" y="{y0 + 80}">{value}{unit_el}</text>',
+            f'<text class="mute xs" x="{x}" y="{y0 + 104}">{sub}</text>',
         ]
     return "\n".join(out)
 
 
-# ── 2. Languages card ─────────────────────────────────────────────────────────
-# Segmented bar + legend grid (by commits), fits in w=400 h=310
+# ── Band 2: languages ─────────────────────────────────────────────────────────
+def build_languages(scores: dict) -> str:
+    y0 = Y_LANG
+    MAX, COLS, ROW_H, BAR_H = 8, 4, 24, 8
+    col_w = CW / COLS
+    bar_y = y0 + 52
 
-def build_language_card(commit_scores):
-    cx, cy, cw, ch = CARD2_X, CARD2_Y, CARD2_W, CARD2_H
-    MAX   = 8
-    BAR_H = 10
-    ROW_H = 22
-    COLS  = 2
-
-    OX    = cx + 16
-    P_W   = cw - 32          # 368
-    col_w = P_W // COLS      # 184
-
-    BAR_Y  = cy + 58         # just below divider at cy+42, some padding
-    LEG_Y0 = BAR_Y + BAR_H + 20
-
-    total  = sum(commit_scores.values()) or 1
-    top    = sorted(commit_scores.items(), key=lambda t: t[1], reverse=True)[:MAX]
+    total = sum(scores.values()) or 1
+    top = sorted(scores.items(), key=lambda t: t[1], reverse=True)[:MAX]
 
     out = [
-        card(cx, cy, cw, ch),
-        header(cx, cy, cw, "Languages (by Commits)", CYAN, delay=100),
-        # background track for the bar
-        f'<rect x="{OX}" y="{BAR_Y}" width="{P_W}" height="{BAR_H}" rx="5" fill="{BORDER}"/>',
+        rule(y0),
+        f'<text class="h" x="{PX}" y="{y0 + 32}">Languages by commits</text>',
+        f'<clipPath id="lang-clip"><rect x="{PX}" y="{bar_y}" width="{CW}" '
+        f'height="{BAR_H}" rx="{BAR_H / 2}"/></clipPath>',
+        f'<rect class="track" x="{PX}" y="{bar_y}" width="{CW}" height="{BAR_H}" rx="{BAR_H / 2}"/>',
+        '<g clip-path="url(#lang-clip)">',
     ]
 
-    # segmented bar
-    cur = OX
-    for j, (name, val) in enumerate(top):
-        seg_w = max(2, int((val / total) * P_W))
-        delay = 200 + j * 55
+    cur = float(PX)
+    for name, val in top:
+        w = val / total * CW
         out.append(
-            f'<rect x="{cur}" y="{BAR_Y}" width="0" height="{BAR_H}" rx="2" fill="{lc(name)}">'
-            f'{a_grow(delay, seg_w)}'
-            f'</rect>'
+            f'<rect class="seg" x="{cur:.1f}" y="{bar_y}" width="{w:.1f}" '
+            f'height="{BAR_H}" fill="{lang_color(name)}"/>'
         )
-        cur += seg_w
+        cur += w
+    out.append("</g>")
 
-    # legend grid
-    for idx, (name, val) in enumerate(top):
-        pct   = val / total * 100
-        col   = idx % COLS
-        row   = idx // COLS
-        lx    = OX + col * col_w
-        ly    = LEG_Y0 + row * ROW_H
-        delay = 600 + idx * 45
+    for i, (name, val) in enumerate(top):
+        x = PX + (i % COLS) * col_w
+        y = y0 + 96 + (i // COLS) * ROW_H
         out += [
-            f'<g opacity="0">{a_fade(delay)}'
-            f'<circle cx="{lx+6}" cy="{ly-5}" r="5" fill="{lc(name)}"/>'
-            f'<text x="{lx+16}" y="{ly}" font-family="system-ui,sans-serif" '
-            f'font-size="11" fill="{FG}">{name}</text>'
-            f'<text x="{lx+col_w-4}" y="{ly}" font-family="system-ui,sans-serif" '
-            f'font-size="11" fill="{GREEN}" text-anchor="end">{pct:.1f}%</text>'
-            f'</g>',
+            f'<circle cx="{x + 4.5:.1f}" cy="{y - 4}" r="4.5" fill="{lang_color(name)}"/>',
+            f'<text class="sm" x="{x + 16:.1f}" y="{y}">{escape(name)}</text>',
+            f'<text class="mute sm" x="{x + col_w - 20:.1f}" y="{y}" '
+            f'text-anchor="end">{val / total * 100:.1f}%</text>',
         ]
-
     return "\n".join(out)
 
 
-# ── 3. Contribution graph ─────────────────────────────────────────────────────
-def build_graph(daily):
-    cx, cy = GRAPH_CX, GRAPH_Y
-    cw, ch = GRAPH_CW, GRAPH_H
+# ── Band 3: 30-day activity, coloured by streak membership ────────────────────
+def build_activity(daily: list, streak: dict, today: date) -> str:
+    y0 = Y_ACT
+    plot_l, plot_r = PX + 28, W - PX
+    pw = plot_r - plot_l
+    baseline = y0 + 150
+    ph = 84
+    top = baseline - ph
+    col = pw / WINDOW
+    bw = min(14.0, col * 0.58)
 
-    ML, MR, MT, MB = 28, 12, 52, 26
-    pw     = cw - ML - MR
-    ph     = ch - MT - MB
-    plot_l = cx + ML
-    base_y = cy + MT + ph
+    first = today - timedelta(days=WINDOW - 1)
+    counts = {d["date"]: d["count"] for d in daily}
+    days = [first + timedelta(days=i) for i in range(WINDOW)]
+    values = [counts.get(d.isoformat(), 0) for d in days]
+    peak = max(values) or 1
 
-    today  = datetime.now(timezone.utc).date()
-    cutoff = today - timedelta(days=29)
-    dmap   = {d["date"]: d["count"] for d in daily}
-    pts    = [{"date": (cutoff + timedelta(days=i)).isoformat(),
-               "count": dmap.get((cutoff + timedelta(days=i)).isoformat(), 0)}
-              for i in range(30)]
-    max_c  = max(p["count"] for p in pts) or 1
+    s_start = date.fromisoformat(streak["current_start"]) if streak["current_start"] else None
+    s_end = date.fromisoformat(streak["current_end"]) if streak["current_end"] else None
+    grace = set(streak["grace_dates"])
 
-    def px(i): return cx + ML + i * pw / 29
-    def py(v): return cy + MT + ph - (v / max_c) * ph
+    def cx(i: int) -> float:
+        return plot_l + i * col + col / 2
 
-    coords = [(px(i), py(p["count"])) for i, p in enumerate(pts)]
+    out = [rule(y0), f'<text class="h" x="{PX}" y="{y0 + 32}">Last {WINDOW} days</text>']
 
-    def smooth(c):
-        d = f"M{c[0][0]:.1f},{c[0][1]:.1f}"
-        for i in range(1, len(c)):
-            x0, y0 = c[i-1]; x1, y1 = c[i]
-            cp = (x0 + x1) / 2
-            d += f" C{cp:.1f},{y0:.1f} {cp:.1f},{y1:.1f} {x1:.1f},{y1:.1f}"
-        return d
+    # legend, right-aligned on the title baseline
+    legend = [("streak", "In streak"), ("dim", "Other days"), ("ring", "Day off, streak kept")]
+    x = float(W - PX)
+    ly = y0 + 32
+    for kind, label in reversed(legend):
+        text_w = len(label) * 6.2
+        x -= text_w
+        out.append(f'<text class="mute sm" x="{x:.1f}" y="{ly}">{label}</text>')
+        x -= 14
+        if kind == "ring":
+            out.append(f'<circle class="ring" cx="{x + 4.5:.1f}" cy="{ly - 4}" r="4"/>')
+        else:
+            out.append(f'<rect class="b-{kind}" x="{x:.1f}" y="{ly - 9}" width="9" height="9" rx="2"/>')
+        x -= 20
 
-    line_d   = smooth(coords)
-    area_d   = line_d + f" L{coords[-1][0]:.1f},{base_y} L{coords[0][0]:.1f},{base_y} Z"
-    path_len = int(pw * 1.2)
-
-    out = [
-        header(cx, cy, cw, "Contribution Graph — Last 30 Days", CYAN, delay=600),
+    # scale
+    out += [
+        f'<line class="grid" x1="{plot_l}" y1="{top}" x2="{plot_r}" y2="{top}"/>',
+        f'<text class="mute xs" x="{plot_l - 8}" y="{top + 4}" text-anchor="end">{peak}</text>',
+        f'<line class="axis" x1="{plot_l}" y1="{baseline}" x2="{plot_r}" y2="{baseline}"/>',
     ]
 
-    for frac in [0.25, 0.5, 0.75, 1.0]:
-        gy = cy + MT + ph - frac * ph
-        gv = round(max_c * frac)
-        out += [
-            f'<line x1="{plot_l}" y1="{gy:.1f}" x2="{cx+cw-MR}" y2="{gy:.1f}" '
-            f'stroke="{BORDER}" stroke-width="0.6" stroke-dasharray="4,4"/>',
-            f'<text x="{plot_l-4}" y="{gy+4:.1f}" font-family="system-ui,sans-serif" '
-            f'font-size="9" fill="{MUTED}" text-anchor="end">{gv}</text>',
-        ]
-
-    out.append(
-        f'<path d="{area_d}" fill="url(#g-area)" opacity="0">'
-        f'{a_fade(700, 800)}'
-        f'</path>'
-    )
-    out.append(
-        f'<path d="{line_d}" fill="none" stroke="{PINK}" stroke-width="2.2" '
-        f'stroke-linejoin="round" filter="url(#glow)" '
-        f'stroke-dasharray="{path_len}" stroke-dashoffset="{path_len}">'
-        f'{a_dash(750, path_len, 900)}'
-        f'</path>'
-    )
-
-    for i, (x, y) in enumerate(coords):
-        delay = 1650 + i * 22
-        out += [
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" fill="{CARD}" '
-            f'stroke="{GREEN}" stroke-width="2" filter="url(#glow-sm)" opacity="0">'
-            f'{a_fade(delay, 180)}</circle>',
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2" fill="{GREEN}" opacity="0">'
-            f'{a_fade(delay, 180)}</circle>',
-        ]
-
-    label_y = base_y + 18
-    for i, p in enumerate(pts):
-        if i % 5 == 0 or i == 29:
+    # bars / ticks / grace rings
+    for i, (d, v) in enumerate(zip(days, values)):
+        x0 = cx(i) - bw / 2
+        iso = d.isoformat()
+        if v > 0:
+            h = max(3.0, v / peak * ph)
+            in_streak = s_start is not None and s_start <= d <= s_end
+            cls = "b-streak" if in_streak else "b-dim"
             out.append(
-                f'<text x="{px(i):.1f}" y="{label_y}" font-family="system-ui,sans-serif" '
-                f'font-size="9" fill="{MUTED}" text-anchor="middle">{p["date"][5:]}</text>'
+                f'<rect class="bar {cls}" style="animation-delay:{i * 22}ms" '
+                f'x="{x0:.1f}" y="{baseline - h:.1f}" width="{bw:.1f}" height="{h:.1f}" rx="3">'
+                f'<title>{short_date(iso)}: {v} contribution{"s" if v != 1 else ""}</title></rect>'
             )
+        elif iso in grace:
+            out.append(f'<circle class="ring" cx="{cx(i):.1f}" cy="{baseline - 7}" r="4.5">'
+                       f'<title>{short_date(iso)}: day off, streak kept</title></circle>')
+        else:
+            out.append(f'<rect class="tick" x="{x0:.1f}" y="{baseline - 2}" '
+                       f'width="{bw:.1f}" height="2" rx="1"/>')
 
+    # bracket under the axis showing where the current streak sits in this window
+    if s_start is not None:
+        i0 = max(0, (s_start - first).days)
+        i1 = min(WINDOW - 1, (s_end - first).days)
+        if i1 >= 0:
+            out.append(f'<line class="span" x1="{cx(i0) - bw / 2:.1f}" y1="{baseline + 10}" '
+                       f'x2="{cx(i1) + bw / 2:.1f}" y2="{baseline + 10}"/>')
+
+    # date labels
+    for i, d in enumerate(days):
+        if i % 5 == 0 or i == WINDOW - 1:
+            out.append(f'<text class="mute xs" x="{cx(i):.1f}" y="{baseline + 30}" '
+                       f'text-anchor="middle">{short_date(d.isoformat())}</text>')
     return "\n".join(out)
 
 
 # ── Assemble ──────────────────────────────────────────────────────────────────
-async def generate_combined_svg(s: Stats) -> None:
-    name           = await s.name
-    stars          = await s.stargazers
-    forks          = await s.forks
-    contribs       = await s.total_contributions
-    views          = await s.views
-    repos          = len(await s.repos)
-    commit_l       = await s.languages_by_commits
-    daily          = await s.daily_contributions
-    streak         = await s.streak_stats
-
-    current_streak = streak["current_streak"]
-    longest_streak = streak["longest_streak"]
-
+def render_svg(name, stars, contribs, repos, commit_langs, daily, streak, now=None, theme="auto") -> str:
+    now = now or datetime.now(timezone.utc)
     parts = [
         f'<svg width="{W}" height="{TOTAL_H}" viewBox="0 0 {W} {TOTAL_H}" '
-        f'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">',
-        f'<rect width="{W}" height="{TOTAL_H}" fill="{BG}" rx="12"/>',
-        svg_defs(),
-        build_stats_card(name, stars, forks, contribs, views, repos,
-                         current_streak, longest_streak),
-        build_language_card(commit_l),
-        build_graph(daily),
-        '</svg>',
+        f'xmlns="http://www.w3.org/2000/svg" role="img" '
+        f'aria-label="GitHub stats: {streak["current_streak"]} day current streak, '
+        f'{stars:,} stars, {contribs:,} contributions">',
+        f'<title>{escape(name)} on GitHub</title>',
+        f'<style>{build_style(theme)}</style>',
+        f'<rect class="panel" x="1" y="1" width="{W - 2}" height="{TOTAL_H - 2}" rx="16"/>',
+        build_header(name, short_date(now.date().isoformat()) + f", {now.year}"),
+        build_hero(streak, stars, contribs, repos),
+        build_languages(commit_langs),
+        build_activity(daily, streak, now.date()),
+        "</svg>",
     ]
+    return "\n".join(parts)
 
+
+async def generate_combined_svg(s: Stats) -> None:
+    data = dict(
+        name=await s.name,
+        stars=await s.stargazers,
+        contribs=await s.total_contributions,
+        repos=len(await s.repos),
+        commit_langs=await s.languages_by_commits,
+        daily=await s.daily_contributions,
+        streak=await s.streak_stats,
+    )
     generate_output_folder()
-    path = "generated/github-stats.svg"
-    with open(path, "w") as f:
-        f.write("\n".join(parts))
-    print(f"✓ {path}  ({W}×{TOTAL_H})")
+    # dark / light are fixed-colour files for <picture>; the plain one follows the OS setting
+    for theme, filename in (("dark", "github-stats-dark.svg"),
+                            ("light", "github-stats-light.svg"),
+                            ("auto", "github-stats.svg")):
+        path = f"generated/{filename}"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(render_svg(theme=theme, **data))
+        print(f"✓ {path}  ({W}×{TOTAL_H})")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 async def main() -> None:
     token = os.getenv("ACCESS_TOKEN")
-    if not token: raise Exception("ACCESS_TOKEN required")
-    user  = os.getenv("GITHUB_ACTOR")
-    if not user: raise RuntimeError("GITHUB_ACTOR required")
+    if not token:
+        raise RuntimeError("ACCESS_TOKEN required")
+    user = os.getenv("GITHUB_USERNAME") or os.getenv("GITHUB_ACTOR")
+    if not user:
+        raise RuntimeError("GITHUB_USERNAME or GITHUB_ACTOR required")
 
     ex_repos = os.getenv("EXCLUDED")
     ex_langs = os.getenv("EXCLUDED_LANGS")
     raw_fork = os.getenv("EXCLUDE_FORKED_REPOS", "")
 
     async with aiohttp.ClientSession() as session:
-        s = Stats(user, token, session,
-                  exclude_repos={x.strip() for x in ex_repos.split(",")} if ex_repos else None,
-                  exclude_langs={x.strip() for x in ex_langs.split(",")} if ex_langs else None,
-                  ignore_forked_repos=bool(raw_fork) and raw_fork.strip().lower() != "false")
+        s = Stats(
+            user, token, session,
+            exclude_repos={x.strip() for x in ex_repos.split(",")} if ex_repos else None,
+            exclude_langs={x.strip() for x in ex_langs.split(",")} if ex_langs else None,
+            ignore_forked_repos=bool(raw_fork) and raw_fork.strip().lower() != "false",
+        )
         await generate_combined_svg(s)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

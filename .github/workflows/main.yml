@@ -1,18 +1,25 @@
 name: Generate Stats Images
 
 on:
-  push:
-    branches: [master]
   schedule:
-    - cron: '5 0 * * *'
-  workflow_dispatch:
+    - cron: '5 0 * * 1' # weekly, Mondays at 00:05 UTC
+  workflow_dispatch: # manual "Run workflow" button
 
 permissions:
   contents: write
 
+concurrency:
+  group: stats
+  cancel-in-progress: false
+
 jobs:
   update-stats:
     runs-on: ubuntu-latest
+    env:
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      # Scheduled runs set GITHUB_ACTOR to whoever last touched the workflow,
+      # so use the repo owner explicitly.
+      GITHUB_USERNAME: ${{ github.repository_owner }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,22 +40,15 @@ jobs:
       - name: Generate images
         run: python3 generate_images.py
         env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           EXCLUDED: ${{ secrets.EXCLUDED }}
           EXCLUDED_LANGS: ${{ secrets.EXCLUDED_LANGS }}
           EXCLUDE_FORKED_REPOS: true
 
       - name: Run clone tracker script
         run: python3 track_clones.py
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          GITHUB_USERNAME: ${{ github.repository_owner }}
 
       - name: Run star tracker script
         run: python3 track_stars.py
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          GITHUB_USERNAME: ${{ github.repository_owner }}
 
       - name: Debug generated output
         run: |
@@ -66,5 +66,6 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Update statistics - $(date +'%Y-%m-%d %H:%M:%S UTC')"
+            git pull --rebase
             git push
           fi

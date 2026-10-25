@@ -9,6 +9,11 @@ from github import Github, Auth
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# GitHub only exposes the last 14 days of traffic, so every run re-sees up to 14
+# days it may already have counted. Daily records must be kept at least that long
+# (with a margin) or days get counted again once they are pruned.
+RECORD_RETENTION_DAYS = 21
+
 
 def load_historical_data():
     """Load both cumulative totals and daily records"""
@@ -36,7 +41,7 @@ def load_historical_data():
 def get_clone_stats():
     """Fetch clone statistics for all repositories"""
     token = os.environ.get("ACCESS_TOKEN")
-    username = os.environ.get("GITHUB_ACTOR")
+    username = os.environ.get("GITHUB_USERNAME") or os.environ.get("GITHUB_ACTOR")
 
     print(f"=== Debug Info ===")
     print(f"Username: {username}")
@@ -44,7 +49,7 @@ def get_clone_stats():
     print("=" * 60)
 
     if not token or not username:
-        raise ValueError("ACCESS_TOKEN and GITHUB_ACTOR must be set")
+        raise ValueError("ACCESS_TOKEN and GITHUB_USERNAME (or GITHUB_ACTOR) must be set")
 
     auth = Auth.Token(token)
     g = Github(auth=auth)
@@ -134,11 +139,14 @@ def calculate_cumulative_totals(clone_data, historical_data, today):
     cumulative = historical_data["cumulative_totals"].copy()
     daily_records = historical_data["daily_records"].copy()
 
+    last_run_date = historical_data["last_run"][:10] if historical_data.get("last_run") else None
+
     for repo in clone_data:
         repo_name = repo["repo_name"]
+        known_repo = repo_name in cumulative
 
         # Initialize repo if not seen before
-        if repo_name not in cumulative:
+        if not known_repo:
             cumulative[repo_name] = {
                 "total_clones": 0,
                 "total_unique": 0,
@@ -150,20 +158,34 @@ def calculate_cumulative_totals(clone_data, historical_data, today):
 
         # Process each day in the breakdown
         for day_str, day_stats in repo["daily_breakdown"].items():
-            # Only add clones if we haven't recorded this day before
-            if day_str not in daily_records[repo_name]:
+            recorded = daily_records[repo_name].get(day_str)
+
+            if recorded is None:
+                # One-time migration guard: older versions pruned records after 2 days.
+                # A day on or before the last run that has no record was already
+                # counted back then, so don't count it again.
+                if known_repo and last_run_date and day_str <= last_run_date:
+                    continue
+
                 daily_records[repo_name][day_str] = {
                     "count": day_stats["count"],
                     "uniques": day_stats["uniques"]
                 }
-
-                # Add to cumulative total
                 cumulative[repo_name]["total_clones"] += day_stats["count"]
-
                 print(f"  → Adding {day_stats['count']} clones from {day_str} for {repo_name}")
 
-        # Clean up old daily records (keep only last 2 days to save space)
-        cutoff_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
+            elif day_stats["count"] > recorded["count"]:
+                # A day can still be in progress when first recorded; top it up.
+                delta = day_stats["count"] - recorded["count"]
+                daily_records[repo_name][day_str] = {
+                    "count": day_stats["count"],
+                    "uniques": day_stats["uniques"]
+                }
+                cumulative[repo_name]["total_clones"] += delta
+                print(f"  → Updating {day_str} for {repo_name}: +{delta} clones")
+
+        # Drop records that have aged out of GitHub's 14-day window
+        cutoff_date = (datetime.now() - timedelta(days=RECORD_RETENTION_DAYS)).strftime("%Y-%m-%d")
         daily_records[repo_name] = {
             day: stats
             for day, stats in daily_records[repo_name].items()

@@ -2,7 +2,7 @@
 
 import asyncio
 import os
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Dict, List, Optional, Set, Tuple, Any, cast
 
 import aiohttp
@@ -160,6 +160,85 @@ query {
     }
   }
 }"""
+
+
+###############################################################################
+# Streak logic
+###############################################################################
+
+# A streak survives this many empty days in a row. It breaks on the next one.
+# 1 -> a single day off is forgiven; two empty days in a row end the streak.
+STREAK_GRACE_DAYS = 1
+
+
+def compute_streaks(
+    days: List[Dict],
+    today: Optional[date] = None,
+    grace: int = STREAK_GRACE_DAYS,
+) -> Dict[str, Any]:
+    """
+    days: [{"date": "YYYY-MM-DD", "count": int}, ...]
+
+    A streak runs from its first active day to its last active day. Empty days
+    inside it (up to `grace` in a row) are bridged and count toward its length.
+    `today` is ignored while it is still empty, since the day isn't over yet.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    series = sorted(
+        (date.fromisoformat(d["date"]), d["count"])
+        for d in days
+        if date.fromisoformat(d["date"]) <= today
+    )
+    if series and series[-1][0] == today and series[-1][1] == 0:
+        series.pop()
+
+    best = (0, None, None)  # length, start, end
+
+    def consider(start: date, end: date) -> None:
+        nonlocal best
+        length = (end - start).days + 1
+        if length > best[0]:
+            best = (length, start, end)
+
+    run_start: Optional[date] = None
+    run_end: Optional[date] = None
+    pending: List[date] = []  # empty days since the last active day
+    bridged: List[date] = []  # empty days inside the current run
+
+    for d, count in series:
+        if count > 0:
+            if run_start is None:
+                run_start = d
+            else:
+                bridged.extend(pending)
+            run_end = d
+            pending = []
+        elif run_start is not None:
+            pending.append(d)
+            if len(pending) > grace:  # streak broken
+                consider(run_start, run_end)
+                run_start = run_end = None
+                pending, bridged = [], []
+
+    current = 0
+    if run_start is not None:
+        consider(run_start, run_end)
+        current = (run_end - run_start).days + 1
+
+    last_active = max((d for d, c in series if c > 0), default=None)
+    iso = lambda x: x.isoformat() if x else None
+
+    return {
+        "current_streak": current,
+        "current_start": iso(run_start),
+        "current_end": iso(run_end),
+        "longest_streak": best[0],
+        "longest_start": iso(best[1]),
+        "longest_end": iso(best[2]),
+        "grace_dates": [x.isoformat() for x in bridged + (pending if run_start else [])],
+        "last_active": iso(last_active),
+        "total_this_year": sum(c for _, c in series),
+    }
 
 
 ###############################################################################
@@ -381,40 +460,8 @@ class Stats:
 
     @property
     async def streak_stats(self) -> Dict:
-        """
-        Returns {current_streak, longest_streak, total_this_year}.
-        """
-        days = await self.daily_contributions
-        if not days:
-            return {"current_streak": 0, "longest_streak": 0, "total_this_year": 0}
-
-        total = sum(d["count"] for d in days)
-        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-        # current streak — walk backwards from today
-        current = 0
-        for d in reversed(days):
-            if d["date"] > today_str:
-                continue
-            if d["count"] > 0:
-                current += 1
-            else:
-                break
-
-        # longest streak
-        longest = cur_run = 0
-        for d in days:
-            if d["count"] > 0:
-                cur_run += 1
-                longest = max(longest, cur_run)
-            else:
-                cur_run = 0
-
-        return {
-            "current_streak": current,
-            "longest_streak": longest,
-            "total_this_year": total,
-        }
+        """See compute_streaks(). One empty day in a row never breaks a streak."""
+        return compute_streaks(await self.daily_contributions)
 
     @property
     async def languages_by_commits(self) -> Dict[str, float]:
@@ -467,7 +514,7 @@ class Stats:
 
 async def main() -> None:
     token = os.getenv("ACCESS_TOKEN")
-    user = os.getenv("GITHUB_ACTOR")
+    user = os.getenv("GITHUB_USERNAME") or os.getenv("GITHUB_ACTOR")
     if not token or not user:
         raise RuntimeError("ACCESS_TOKEN and GITHUB_ACTOR must be set")
     async with aiohttp.ClientSession() as session:
