@@ -1,47 +1,42 @@
 {
-  "last_updated": "2026-10-25 04:28:49",
+  "last_updated": "2026-10-25 17:12:34",
   "last_run_date": "2026-10-25",
   "period_stats": {
     "description": "Clone statistics for the last 14 days",
-    "total_clones": 1067,
-    "total_unique_clones": 377,
+    "total_clones": 1092,
+    "total_unique_clones": 367,
     "repositories_tracked": 9,
     "repositories_with_clones": 9,
     "top_repositories": [
       {
         "name": "eulix",
-        "period_clones": 939,
-        "period_unique": 272
+        "period_clones": 972,
+        "period_unique": 273
       },
       {
         "name": "tyr",
-        "period_clones": 35,
-        "period_unique": 24
+        "period_clones": 31,
+        "period_unique": 19
       },
       {
         "name": "vanish",
-        "period_clones": 28,
-        "period_unique": 16
+        "period_clones": 30,
+        "period_unique": 17
       },
       {
         "name": "Hecate",
-        "period_clones": 27,
-        "period_unique": 27
+        "period_clones": 23,
+        "period_unique": 22
       },
       {
         "name": "Nurysso",
-        "period_clones": 10,
-        "period_unique": 10
+        "period_clones": 11,
+        "period_unique": 11
       },
       {
         "name": "prtofolio",
-        "period_clones": 10,
-        "period_unique": 10
-      },
-      {
-        "name": "Hermes",
-        "period_clones": 7,
-        "period_unique": 7
+        "period_clones": 9,
+        "period_unique": 9
       },
       {
         "name": "BinRex",
@@ -50,6 +45,11 @@
       },
       {
         "name": "Hera",
+        "period_clones": 5,
+        "period_unique": 5
+      },
+      {
+        "name": "Hermes",
         "period_clones": 5,
         "period_unique": 5
       }
@@ -131,7 +131,7 @@
       "total_clones": 22292,
       "total_unique": 277,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "Freya": {
       "total_clones": 793,
@@ -155,13 +155,13 @@
       "total_clones": 8360,
       "total_unique": 84,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "Hermes": {
       "total_clones": 860,
       "total_unique": 21,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "hydra": {
       "total_clones": 2,
@@ -185,7 +185,7 @@
       "total_clones": 2609,
       "total_unique": 84,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "pebble": {
       "total_clones": 257,
@@ -197,7 +197,7 @@
       "total_clones": 3435,
       "total_unique": 68,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "sddm-astronaut-theme": {
       "total_clones": 759,
@@ -209,7 +209,7 @@
       "total_clones": 5055,
       "total_unique": 57,
       "first_tracked": "2025-12-08 14:40:32",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "venus": {
       "total_clones": 79,
@@ -227,7 +227,7 @@
       "total_clones": 5513,
       "total_unique": 38,
       "first_tracked": "2025-12-15 01:42:44",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "Apollo": {
       "total_clones": 18,
@@ -251,7 +251,7 @@
       "total_clones": 401,
       "total_unique": 8,
       "first_tracked": "2026-06-22 13:23:49",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     },
     "gstrings": {
       "total_clones": 281,
@@ -263,7 +263,7 @@
       "total_clones": 256,
       "total_unique": 6,
       "first_tracked": "2026-06-22 13:23:49",
-      "last_updated": "2026-10-25 04:28:49"
+      "last_updated": "2026-10-25 17:12:34"
     }
   },
   "daily_records": {
