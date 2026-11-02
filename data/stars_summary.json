@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-26 04:31:27",
+  "last_updated": "2026-11-02 05:49:01",
   "total_stars": 182,
   "total_repositories": 31,
   "public_repositories": 31,
@@ -8,7 +8,7 @@
     {
       "name": "Hecate",
       "stars": 119,
-      "language": "Shell"
+      "language": "QML"
     },
     {
       "name": "eulix",
